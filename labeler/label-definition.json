@@ -1,0 +1,13 @@
+{
+  "identifier": "us-politics",
+  "severity": "inform",
+  "blurs": "none",
+  "defaultSetting": "warn",
+  "locales": [
+    {
+      "lang": "en",
+      "name": "US politics",
+      "description": "The post contains or references United States politics: American political figures, parties, elections or voting, legislation or government policy, political institutions, or political events."
+    }
+  ]
+}

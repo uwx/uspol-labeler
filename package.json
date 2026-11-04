@@ -1,0 +1,53 @@
+{
+  "name": "uspol-labeler",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bluesky labeler that flags posts containing or referencing US politics, using a distilled MiniLM classifier exported to ONNX.",
+  "scripts": {
+    "collect": "bun scripts/collect.ts",
+    "label:seed": "python scripts/teacher_label.py",
+    "build:data": "python scripts/build_dataset.py",
+    "train": "python scripts/train.py",
+    "export": "python scripts/export_onnx.py",
+    "labeler": "tsx labeler/src/index.ts",
+    "bench": "tsx labeler/src/bench.ts",
+    "typecheck": "tsc --noEmit",
+    "label:teacher": "python scripts/teacher_label.py",
+    "label:laya": "python scripts/laya_label.py",
+    "serve:labels": "tsx scripts/serve_labels.ts",
+    "rate": "tsx scripts/rate_probe.ts"
+  },
+  "dependencies": {
+    "@atcute/atproto": "^4.0.4",
+    "@atcute/cbor": "^2.3.8",
+    "@atcute/crypto": "^2.4.4",
+    "@atcute/jetstream": "^2.2.1",
+    "@atcute/labeler": "^1.0.2",
+    "@atcute/lexicons": "^2.1.1",
+    "@atcute/xrpc-server": "^2.1.0",
+    "@atcute/xrpc-server-node": "^2.1.3",
+    "@huggingface/tokenizers": "^0.2.0",
+    "better-sqlite3": "^13.0.3",
+    "onnxruntime-node": "^1.31.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.20.5",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "onnxruntime-node"
+    ]
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
