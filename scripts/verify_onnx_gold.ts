@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { Classifier } from '../labeler/src/classifier.js';
 
-const classifier = await Classifier.create({ modelDir: process.env.MODEL_DIR ?? 'model/onnx', provider: (process.env.PROVIDER as 'dml' | 'cpu' | 'auto' | undefined) ?? 'dml' });
+const classifier = await Classifier.create({ modelDir: process.env.MODEL_DIR ?? 'model/onnx', modelFile: process.env.MODEL_FILE, provider: (process.env.PROVIDER as 'cuda' | 'dml' | 'cpu' | 'auto' | undefined) ?? 'dml' });
 const gold = readFileSync('data/gold.jsonl', 'utf8').trim().split('\n').map((line) => JSON.parse(line) as { uri: string; text: string; label: number });
 const predictions = new Map(
 	readFileSync('data/gold_predictions.jsonl', 'utf8').trim().split('\n').map((line) => {

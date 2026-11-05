@@ -16,6 +16,7 @@ try {
 
 const env = process.env;
 const MODEL_DIR = env.MODEL_DIR ?? 'model/onnx';
+const MODEL_FILE = env.MODEL_FILE ?? 'model.onnx';
 const FIREHOSE_URL = env.FIREHOSE_URL ?? 'wss://jetstream2.us-east.bsky.network/subscribe';
 const CURSOR_FILE = env.CURSOR_FILE ?? 'data/cursor.txt';
 const LABEL_DB = env.LABEL_DB ?? 'data/labels.db';
@@ -26,7 +27,7 @@ const BATCH_SIZE = Math.max(1, Number(env.BATCH_SIZE ?? 64));
 const FLUSH_MS = Math.max(0, Number(env.FLUSH_MS ?? 25));
 const MAX_QUEUE = Math.max(BATCH_SIZE, Number(env.MAX_QUEUE ?? 20_000));
 const METRICS_PORT = Number(env.METRICS_PORT ?? 4103);
-const PROVIDER = (env.PROVIDER as 'auto' | 'cpu' | 'dml' | undefined) ?? 'auto';
+const PROVIDER = (env.PROVIDER as 'auto' | 'cpu' | 'dml' | 'cuda' | undefined) ?? 'auto';
 const DID = env.DID;
 const SIGNING_KEY = env.SIGNING_KEY;
 const WELL_KNOWN_DID = env.WELL_KNOWN_DID ?? DID;
@@ -54,7 +55,7 @@ function delay(ms: number): Promise<void> {
 	return promise;
 }
 
-const classifier = await Classifier.create({ modelDir: MODEL_DIR, provider: PROVIDER });
+const classifier = await Classifier.create({ modelDir: MODEL_DIR, modelFile: MODEL_FILE, provider: PROVIDER });
 const store = new SqliteLabelStore(LABEL_DB);
 const labelService = DID && SIGNING_KEY
 	? await createLabelService({ did: DID, signingKeyHex: SIGNING_KEY, store, port: PORT, wellKnownDid: WELL_KNOWN_DID, onError: (error) => console.error(JSON.stringify({ serviceError: String(error) })) })

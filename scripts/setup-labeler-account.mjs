@@ -164,8 +164,9 @@ async function main() {
 		const current = await xrpc('com.atproto.server.getSession', { token: session.accessJwt });
 		if (current.handle !== HANDLE) await updateHandle(session);
 
-		const key = SIGNING_KEY
-			? await Secp256k1PrivateKeyExportable.importRaw(Buffer.from(SIGNING_KEY, 'hex'))
+		const existingKey = SIGNING_KEY || (await readFile(KEY_FILE, 'utf8').catch(() => null));
+		const key = existingKey
+			? await Secp256k1PrivateKeyExportable.importRaw(Buffer.from(existingKey.trim(), 'hex'))
 			: await Secp256k1PrivateKeyExportable.createKeypair();
 		const privateKeyHex = await key.exportPrivateKey('rawHex');
 		const publicKeyDid = await key.exportPublicKey('did');

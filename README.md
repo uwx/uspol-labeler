@@ -2,6 +2,8 @@
 
 A tiny US-politics classifier distilled from a local teacher, exported to ONNX, and run as a Bluesky labeler over the Jetstream firehose with ONNX Runtime (DirectML on Windows).
 
+> For step-by-step account setup, training your own model, and Docker Compose deployment, see [`GUIDE.md`](GUIDE.md).
+
 The label is `us-politics`: the post contains or references United States politics — American political figures, parties, elections and voting, legislation or government policy, political institutions, or political events.
 
 ## Results
@@ -20,11 +22,11 @@ The label is `us-politics`: the post contains or references United States politi
 | Gold metrics (manual) | AUC 0.956; P 0.940 / R 0.940 / F1 0.940 at 0.5; P 0.931 / R 0.806 at 0.85 |
 | Distilled test metrics | AUC 0.927; P 0.794 / R 0.828 / F1 0.811 at 0.6 |
 | ONNX parity | max \|Δ\| 6.9e-7 vs PyTorch; 0.933 gold accuracy |
-| Labeler provider | DirectML (`dml`), RTX 4070 SUPER |
-| Classifier throughput | 1,613 posts/s at batch 128 (p50 78.9 ms, p99 89.8 ms) |
+| Labeler provider | DirectML (`dml`), RTX 4070 SUPER; CUDA 13.0 (`cuda`), RTX 5060 Ti |
+| Classifier throughput | 1,613 posts/s DirectML; 2,253 posts/s CUDA, batch 128 |
 | CPU int8 fallback | 90 posts/s at batch 64 (1.45x live post traffic) |
 | Live firehose (observed) | 62 post creates/s, 664 commit events/s |
-| Headroom | ~26x over post traffic on DirectML |
+| Headroom | ~26x DirectML; ~36x CUDA over post traffic |
 
 `data/gold.jsonl` contains the manual labels. `data/dataset.jsonl` is the assembled dataset (see `data/README.md`).
 
@@ -175,7 +177,7 @@ tsx scripts/test_subscribe.ts   # subscribeLabels CBOR frames over a tunnel
 
 ## Labeler service
 
-The live labeler account is `uspol.puppykitty.racing` (`did:plc:xwq5acimyyzd5pv4iklkez5a`), with endpoint `https://uspol.puppykitty.racing`. Its DID document has an `#atproto_labeler` service and an `#atproto_label` signing key; `labeler/label-definition.json` is published as `app.bsky.labeler.service/self`. The endpoint serves `/.well-known/atproto-did` for handle verification.
+The live labeler account is `uspol.puppykitty.racing` (`did:plc:xwq5acimyyzd5pv4iklkez5a`), with endpoint `https://uspol.puppykitty.racing`. It runs in Docker on `littleguy` with CUDA 13.0 (`provider=cuda`). Its DID document has an `#atproto_labeler` service and an `#atproto_label` signing key; `labeler/label-definition.json` is published as `app.bsky.labeler.service/self`. The endpoint serves `/.well-known/atproto-did` for handle verification.
 
 The service uses `@atcute/labeler` for signing and sequence management and `@atcute/xrpc-server` + `@atcute/xrpc-server-node` for the XRPC routes. `labeler/src/store.ts` is a SQLite `LabelStore`; `labeler/src/service.ts` wires the router and the WebSocket adapter.
 

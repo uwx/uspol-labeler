@@ -5,8 +5,10 @@ import * as ort from 'onnxruntime-node';
 
 export interface ClassifierOptions {
 	modelDir: string;
+	/** ONNX file inside modelDir. Defaults to model.onnx. */
+	modelFile?: string;
 	maxLength?: number;
-	provider?: 'dml' | 'cpu' | 'auto';
+	provider?: 'cuda' | 'dml' | 'cpu' | 'auto';
 	threads?: number;
 }
 
@@ -51,13 +53,19 @@ export class Classifier {
 		const tokenizer = new Tokenizer(tokenizerJson, tokenizerConfig);
 
 		const requested = options.provider ?? 'auto';
-		const providers: string[] = requested === 'cpu' ? ['cpu'] : requested === 'dml' ? ['dml'] : ['dml', 'cpu'];
+		const modelPath = join(options.modelDir, options.modelFile ?? 'model.onnx');
+		const providers: string[] =
+			requested === 'cpu' ? ['cpu']
+			: requested === 'dml' ? ['dml']
+			: requested === 'cuda' ? ['cuda']
+			: process.platform === 'win32' ? ['dml', 'cpu']
+			: ['cuda', 'cpu'];
 		let session: ort.InferenceSession | null = null;
 		let used = '';
 		let lastError: unknown = null;
 		for (const provider of providers) {
 			try {
-				session = await ort.InferenceSession.create(join(options.modelDir, 'model.onnx'), {
+				session = await ort.InferenceSession.create(modelPath, {
 					executionProviders: [provider],
 					intraOpNumThreads: options.threads ?? 1,
 					interOpNumThreads: 1,
@@ -70,7 +78,9 @@ export class Classifier {
 			}
 		}
 		if (!session) throw lastError ?? new Error('could not create ONNX session');
-		if (requested === 'dml' && used !== 'dml') throw lastError ?? new Error('DirectML requested but unavailable');
+		if ((requested === 'dml' || requested === 'cuda') && used !== requested) {
+			throw lastError ?? new Error(`${requested} requested but unavailable`);
+		}
 
 		return new Classifier(tokenizer, session, maxLength, {
 			provider: used,

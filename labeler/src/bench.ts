@@ -18,14 +18,15 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 
 const MODEL_DIR = args.get('model') ?? process.env.MODEL_DIR ?? 'model/onnx';
+const MODEL_FILE = args.get('model-file') ?? process.env.MODEL_FILE;
 const INPUT = args.get('input') ?? 'data/bench_posts.jsonl';
 const BATCH_SIZE = Math.max(1, Number(args.get('batch') ?? 64));
-const PROVIDER = (args.get('provider') as 'auto' | 'cpu' | 'dml' | undefined) ?? 'auto';
+const PROVIDER = (args.get('provider') as 'auto' | 'cpu' | 'dml' | 'cuda' | undefined) ?? 'auto';
 const LIVE_RATE = Number(args.get('live-rate') ?? 0);
 
 const raw = (await readFile(INPUT, 'utf8')).trim().split('\n');
 const texts = raw.map((line) => (JSON.parse(line) as Row).text).filter((text) => text.length > 0);
-const classifier = await Classifier.create({ modelDir: MODEL_DIR, provider: PROVIDER });
+const classifier = await Classifier.create({ modelDir: MODEL_DIR, modelFile: MODEL_FILE, provider: PROVIDER });
 console.log(JSON.stringify({ provider: classifier.stats.provider, loadMs: classifier.stats.loadMs, posts: texts.length, batch: BATCH_SIZE }));
 
 // warmup: first call pays kernel compilation / DML graph capture
